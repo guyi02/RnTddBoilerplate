@@ -1,6 +1,9 @@
 import {RemoteAuthentication} from './remote-authentication';
-import {mockAuthentication} from '@/domain/test/mock-authentication';
 import {HttpPostClientMock} from '@/data/test/mock-http-client';
+import {HttpStatusCode} from '@/data/protocols/http/http-response';
+import {mockAuthentication} from '@/domain/test/mock-authentication';
+import {InvalidCredentialsError} from '@/domain/errors/invalid-credentials-error';
+import {UnexpectedError} from '@/domain/errors/unexpected-error';
 import faker from 'faker';
 
 type SutTypes = {
@@ -30,5 +33,49 @@ describe('Remote Authentication', () => {
     const authenticationParams = mockAuthentication();
     await sut.auth(authenticationParams);
     expect(httpPostClientMock.body).toEqual(authenticationParams);
+  });
+
+  test('should throw UnexpectedError if HttpStatusClient returns 400', async () => {
+    const {sut, httpPostClientMock} = makeSut();
+    // mock da implementação
+    httpPostClientMock.response = {
+      statusCode: HttpStatusCode.badRequest,
+    };
+    // para teste de exceção no jest precisamos capturar como uma promisse
+    const promisse = sut.auth(mockAuthentication());
+    await expect(promisse).rejects.toThrow(new UnexpectedError());
+  });
+
+  test('should throw InvalidCredentialsError if HttpStatusClient returns 401', async () => {
+    const {sut, httpPostClientMock} = makeSut();
+    // mock da implementação
+    httpPostClientMock.response = {
+      statusCode: HttpStatusCode.unathorized,
+    };
+    // para teste de exceção no jest precisamos capturar como uma promisse
+    const promisse = sut.auth(mockAuthentication());
+    await expect(promisse).rejects.toThrow(new InvalidCredentialsError());
+  });
+
+  test('should throw UnexpectedError if HttpStatusClient returns 404', async () => {
+    const {sut, httpPostClientMock} = makeSut();
+    // mock da implementação
+    httpPostClientMock.response = {
+      statusCode: HttpStatusCode.notFound,
+    };
+    // para teste de exceção no jest precisamos capturar como uma promisse
+    const promisse = sut.auth(mockAuthentication());
+    await expect(promisse).rejects.toThrow(new UnexpectedError());
+  });
+
+  test('should throw UnexpectedError if HttpStatusClient returns 500', async () => {
+    const {sut, httpPostClientMock} = makeSut();
+    // mock da implementação
+    httpPostClientMock.response = {
+      statusCode: HttpStatusCode.serverError,
+    };
+    // para teste de exceção no jest precisamos capturar como uma promisse
+    const promisse = sut.auth(mockAuthentication());
+    await expect(promisse).rejects.toThrow(new UnexpectedError());
   });
 });
