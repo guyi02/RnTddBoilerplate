@@ -1,7 +1,7 @@
 import React from 'react';
 import {Routes} from './routes';
 import {ThemeProvider} from 'styled-components';
-import theme from './theme';
+import theme from '@/main/theme';
 import 'react-native-gesture-handler';
 const App = () => {
   return (
